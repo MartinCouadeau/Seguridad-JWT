@@ -68,13 +68,76 @@ export const callbackAuth0 = passport.authenticate("auth0", {
 export const auth0CallbackHandler = (req, res) => {
   if (!req.user) return res.status(401).json({ message: "No autorizado" });
   
-  const token = jwt.sign(req.user, process.env.JWT_SECRET, { expiresIn: "1h" });
+  // Asegurar que el JWT contenga nombre/email y rol "user"
+  const jwtPayload = {
+    name: req.user.Name,
+    email: req.user.Email,
+    role: "user" // Rol por defecto explícito
+  };
 
+  const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+  // Devolver SOLO el JWT (más limpio)
   res.json({
+    success: true,
     message: "OAuth2 login exitoso",
-    user: req.user,
-    jwt: token
+    jwt: token,
+    user: jwtPayload
   });
+};
+
+// --- NUEVO ENDPOINT: GET /auth/external/callback ---
+export const externalCallback = (req, res) => {
+  try {
+    // En un escenario real, aquí recibirías los datos del usuario autenticado
+    // Por ahora simulamos que recibimos los datos del cuerpo de la petición
+    const { name, email } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ 
+        message: "Se requieren nombre y email del usuario" 
+      });
+    }
+
+    // Buscar si el usuario ya existe en memoria
+    let user = users.find(u => u.Email === email);
+    
+    if (!user) {
+      // Crear nuevo usuario con rol por defecto
+      user = {
+        Name: name,
+        Email: email,
+        Role: "user"
+      };
+      users.push(user);
+    }
+
+    // Emitir JWT interno con nombre/email y rol por defecto
+    const tokenPayload = {
+      name: user.Name,
+      email: user.Email,
+      role: user.Role
+    };
+
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { 
+      expiresIn: "1h" 
+    });
+
+    // Devolver el JWT
+    res.json({
+      success: true,
+      message: "Login externo exitoso",
+      jwt: token,
+      user: tokenPayload
+    });
+
+  } catch (error) {
+    console.error("Error en external callback:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor"
+    });
+  }
 };
 
 // --- NUEVO: LISTAR USUARIOS ---
@@ -87,5 +150,6 @@ export default {
   loginAuth0, 
   callbackAuth0, 
   auth0CallbackHandler,
+  externalCallback, // <-- NUEVO
   listOAuthUsers
 };
