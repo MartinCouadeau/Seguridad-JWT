@@ -3,10 +3,8 @@ import passport from "passport";
 import { Strategy as Auth0Strategy } from "passport-auth0";
 import 'dotenv/config';
 
-// --- LISTA EN MEMORIA ---
-const users = []; // List<User>
+const users = [];
 
-// --- CONFIGURACIÓN DE AUTH0 ---
 passport.use(
   "auth0",
   new Auth0Strategy({
@@ -17,14 +15,12 @@ passport.use(
   },
   function(accessToken, refreshToken, extraParams, profile, done) {
 
-    // Datos del usuario OAuth2
     const user = {
       Name: profile.displayName,
       Email: profile.emails?.[0]?.value ?? "no-email@unknown.com",
       Role: "user"
     };
 
-    // --- Guardar en lista en memoria ---
     const exists = users.find(u => u.Email === user.Email);
     if (!exists) users.push(user);
 
@@ -32,11 +28,9 @@ passport.use(
   }
 ));
 
-// Serializar/deserializar usuario (necesario para Passport)
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
-// --- LOGIN MOCK ---
 export const loginMock = (req, res) => {
   const { username, password } = req.body;
 
@@ -54,7 +48,6 @@ export const loginMock = (req, res) => {
   return res.status(401).json({ message: "Credenciales inválidas" });
 };
 
-// --- LOGIN SOCIAL (Auth0 / Google) ---
 export const loginAuth0 = passport.authenticate("auth0", {
   scope: "openid email profile"
 });
@@ -64,20 +57,17 @@ export const callbackAuth0 = passport.authenticate("auth0", {
   session: false
 });
 
-// Este handler genera el JWT INTERNO
 export const auth0CallbackHandler = (req, res) => {
   if (!req.user) return res.status(401).json({ message: "No autorizado" });
   
-  // Asegurar que el JWT contenga nombre/email y rol "user"
   const jwtPayload = {
     name: req.user.Name,
     email: req.user.Email,
-    role: "user" // Rol por defecto explícito
+    role: "user"
   };
 
   const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-  // Devolver SOLO el JWT (más limpio)
   res.json({
     success: true,
     message: "OAuth2 login exitoso",
@@ -86,11 +76,8 @@ export const auth0CallbackHandler = (req, res) => {
   });
 };
 
-// --- NUEVO ENDPOINT: GET /auth/external/callback ---
 export const externalCallback = (req, res) => {
   try {
-    // En un escenario real, aquí recibirías los datos del usuario autenticado
-    // Por ahora simulamos que recibimos los datos del cuerpo de la petición
     const { name, email } = req.body;
 
     if (!name || !email) {
@@ -99,11 +86,9 @@ export const externalCallback = (req, res) => {
       });
     }
 
-    // Buscar si el usuario ya existe en memoria
     let user = users.find(u => u.Email === email);
     
     if (!user) {
-      // Crear nuevo usuario con rol por defecto
       user = {
         Name: name,
         Email: email,
@@ -112,7 +97,6 @@ export const externalCallback = (req, res) => {
       users.push(user);
     }
 
-    // Emitir JWT interno con nombre/email y rol por defecto
     const tokenPayload = {
       name: user.Name,
       email: user.Email,
@@ -123,7 +107,6 @@ export const externalCallback = (req, res) => {
       expiresIn: "1h" 
     });
 
-    // Devolver el JWT
     res.json({
       success: true,
       message: "Login externo exitoso",
@@ -140,7 +123,6 @@ export const externalCallback = (req, res) => {
   }
 };
 
-// --- NUEVO: LISTAR USUARIOS ---
 export const listOAuthUsers = (req, res) => {
   res.json(users);
 };
@@ -150,6 +132,6 @@ export default {
   loginAuth0, 
   callbackAuth0, 
   auth0CallbackHandler,
-  externalCallback, // <-- NUEVO
+  externalCallback,
   listOAuthUsers
 };
