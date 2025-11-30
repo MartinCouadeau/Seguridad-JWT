@@ -14,7 +14,6 @@ Es ideal para trabajos técnicos o proyectos educativos donde se requiere demost
 
 ## 📂 Estructura del Proyecto
 
-```markdown
 /project
 │
 ├── config.json
@@ -28,7 +27,7 @@ Es ideal para trabajos técnicos o proyectos educativos donde se requiere demost
 │
 └── routes
 └── authRoutes.js
-```
+
 ---
 
 ## 🚀 Instalación
@@ -48,7 +47,7 @@ npm install
 ### 3️⃣ Configurar la clave JWT
 
 ```bash
-Editar el archivo config.json:
+Editar el archivo config.json con una clave a gusto:
 ```
 
 ```
@@ -78,7 +77,7 @@ http://localhost:3001
 ```bash
 ## POST /auth/login
 - url: http://localhost:3001/auth/login
-- descripcion: crea y entrega el bearer token que permite ingreso
+- descripcion: crea y entrega el bearer token que permite ingreso para usuarios y admin
 - requestBody:
   - required: true
   - content:
@@ -98,9 +97,9 @@ http://localhost:3001
 ##🛡️ Acceso a Rutas Protegidas
 
 ```bash
-## POST /auth/protected
-- url: http://localhost:3001/auth/protected
-- descripcion: da acceso a la ruta
+## POST /auth/usuario
+- url: http://localhost:3001/auth/usuario
+- descripcion: da acceso a la ruta protegida de mas bajo nivel pueden acceder a ella tanto usuarios como admins
 - parametros:
   - required: true
   bearer-token
@@ -110,11 +109,14 @@ http://localhost:3001
 - respuesta:
   - 200:
     {
-        "message": "Acceso permitido",
+        "message": "Bienvenido usuario.",
         "user": {
-            "sub": "admin",
-            "iat": 1764522200,
-            "exp": 1764523100
+            "name": "Usuario Normal",
+            "email": "user@example.com",
+            "role": "user",
+            "sub": "user",
+            "iat": 1764524653,
+            "exp": 1764525553
         }
     }
   - 401:
@@ -122,6 +124,37 @@ http://localhost:3001
         "error": "Token inválido o expirado"
     }
 ```
+
+```bash
+## POST /auth/admin
+- url: http://localhost:3001/auth/admin
+- descripcion: da acceso a la ruta protegida solo para usuarios de nivel admin
+- parametros:
+  - required: true
+  bearer-token
+    {
+        bearer: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+    }
+- respuesta:
+  - 200:
+    {
+        "message": "Bienvenido administrador.",
+        "user": {
+            "name": "Administrador",
+            "email": "admin@example.com",
+            "role": "admin",
+            "sub": "admin",
+            "iat": 1764525372,
+            "exp": 1764526272
+        }
+    }
+  - 401:
+    {
+        "error": "Token inválido o expirado"
+    }
+```
+
+
 
 ##📎 Notas finales
 - Este proyecto no usa base de datos, solo credenciales mock.
