@@ -1,31 +1,27 @@
-const jwt = require("jsonwebtoken");
-const config = require("../config.json");
-const SECRET = config.Jwt.Secret;
+import jwt from "jsonwebtoken";
+import 'dotenv/config';
 
-module.exports = (allowedRoles = []) => {
-  return (req, res, next) => {
-    const authHeader = req.headers["authorization"];
+export const jwtAuth = (...requiredRoles) => { // acepta 1 o más roles
+    return (req, res, next) => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ message: "Token requerido" });
+        }
 
-    if (!authHeader) {
-      return res.status(401).json({ error: "Token requerido" });
-    }
+        const token = authHeader.split(" ")[1];
+        try {
+            const payload = jwt.verify(token, process.env.JWT_SECRET);
 
-    const token = authHeader.split(" ")[1];
+            // Si se pasan roles, revisamos si el rol del usuario está incluido
+            if (requiredRoles.length && !requiredRoles.includes(payload.Role)) {
+                return res.status(403).json({ message: "No autorizado" });
+            }
 
-    jwt.verify(token, SECRET, (err, user) => {
-      if (err) {
-        return res.status(401).json({ error: "Token inválido o expirado" });
-      }
-
-      // Guardamos los datos del usuario
-      req.user = user;
-
-      // Validación de roles
-      if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-        return res.status(403).json({ error: "Acceso denegado (rol insuficiente)" });
-      }
-
-      next();
-    });
-  };
+            req.user = payload;
+            next();
+        } catch (err) {
+            console.error(err); // para debugging
+            return res.status(401).json({ message: "Token inválido" });
+        }
+    };
 };

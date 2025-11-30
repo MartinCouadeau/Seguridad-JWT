@@ -1,5 +1,0 @@
-{
-  "Jwt": {
-    "Secret": "una-clave-segura"
-  }
-}

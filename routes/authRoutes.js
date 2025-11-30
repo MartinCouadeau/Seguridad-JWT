@@ -1,25 +1,40 @@
-const express = require("express");
+import express from "express";
+import session from "express-session";
+import passport from "passport";
+import authController from "../controllers/authController.js";
+
 const router = express.Router();
-const authController = require("../controllers/authController");
-const authMiddleware = require("../middleware/authMiddleware");
 
-// Login
-router.post("/login", authController.login);
+// --- SESSION (OBLIGATORIO PARA AUTH0) ---
+router.use(
+  session({
+    secret: "keyboard cat",
+    resave: false,
+    saveUninitialized: true
+  })
+);
 
-// Endpoint accesible solo por usuarios con rol "user"
-router.get("/usuario", authMiddleware(["user", "admin"]), (req, res) => {
-  res.json({
-    message: "Bienvenido usuario.",
-    user: req.user
-  });
+router.use(passport.initialize());
+router.use(passport.session());
+
+// --- LOGIN MOCK ---
+router.post("/login", authController.loginMock);
+
+// --- AUTENTICACIÓN AUTH0 (REDIRECCIÓN A GOOGLE) ---
+router.get("/login/auth0", authController.loginAuth0);
+
+router.get("/users", authController.listOAuthUsers);
+
+// --- CALLBACK DESDE AUTH0 ---
+router.get(
+  "/external/callback",
+  authController.callbackAuth0,
+  authController.auth0CallbackHandler
+);
+
+// EN CASO DE ERROR
+router.get("/login-failed", (req, res) => {
+  res.status(401).json({ message: "Falló el login con Auth0/Google" });
 });
 
-// Endpoint accesible solo por administradores
-router.get("/admin", authMiddleware(["admin"]), (req, res) => {
-  res.json({
-    message: "Bienvenido administrador.",
-    user: req.user
-  });
-});
-
-module.exports = router;
+export default router;

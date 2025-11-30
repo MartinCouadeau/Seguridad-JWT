@@ -1,14 +1,14 @@
-const express = require("express");
-const authRoutes = require("./routes/authRoutes");
+import express from "express";
+import bodyParser from "body-parser";
+import authRoutes from "./routes/authRoutes.js";
+import protectedRoutes from "./routes/protected.js";
+import passport from "passport";
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(passport.initialize());
 
 app.use("/auth", authRoutes);
+app.use("/auth", protectedRoutes);
 
-app.get("/", (req, res) => {
-  res.send("API funcionando");
-});
-
-const PORT = 3001;
-app.listen(PORT, () => console.log("Servidor escuchando en http://localhost:" + PORT));
+app.listen(3001, () => console.log("Server running on port 3001"));
