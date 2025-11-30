@@ -14,6 +14,7 @@ Es ideal para trabajos técnicos o proyectos educativos donde se requiere demost
 
 ## 📂 Estructura del Proyecto
 
+```markdown
 /project
 │
 ├── config.json
@@ -27,7 +28,7 @@ Es ideal para trabajos técnicos o proyectos educativos donde se requiere demost
 │
 └── routes
 └── authRoutes.js
-
+```
 ---
 
 ## 🚀 Instalación
