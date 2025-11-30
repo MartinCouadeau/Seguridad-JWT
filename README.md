@@ -14,6 +14,7 @@ Es ideal para trabajos técnicos o proyectos educativos donde se requiere demost
 
 ## 📂 Estructura del Proyecto
 
+```
 /project
 │
 ├── controllers
@@ -30,9 +31,7 @@ Es ideal para trabajos técnicos o proyectos educativos donde se requiere demost
 │ └── protected.js
 │
 ├── server.js
-│
-│
-
+```
 
 ---
 
